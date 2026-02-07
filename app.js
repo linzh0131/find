@@ -3,6 +3,7 @@ let markers = [];
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording = false;
+let turnstileToken = null;
 let state = {
   lat: null,
   lng: null,
@@ -231,28 +232,61 @@ function loadGoogleMaps(apiKey) {
   });
 }
 
+async function initTurnstile(siteKey) {
+  return new Promise((resolve) => {
+    window.turnstileCallback = function(token) {
+      turnstileToken = token;
+      resolve(token);
+    };
+    
+    // Wait for Turnstile to be loaded
+    const checkTurnstile = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(checkTurnstile);
+        const container = document.querySelector('.cf-turnstile');
+        if (container) {
+          container.setAttribute('data-callback', 'turnstileCallback');
+          container.setAttribute('data-sitekey', siteKey);
+          window.turnstile.render(container);
+        }
+      }
+    }, 100);
+  });
+}
+
+async function autoGetLocation() {
+  try {
+    const coords = await getLocation();
+    state.lat = coords.latitude;
+    state.lng = coords.longitude;
+    updateCoordsLabel();
+    if (map) map.setCenter({ lat: state.lat, lng: state.lng });
+  } catch (e) {
+    setStatus("error", `定位失敗: ${e.message}`);
+    document.getElementById("coords").textContent = "定位失敗";
+  }
+}
+
 async function boot() {
   try {
     const res = await fetch(`${CONFIG.API_BASE}/config`);
     const data = await res.json();
+    
+    // Initialize Turnstile
+    if (data.turnstile_site_key) {
+      const container = document.querySelector('.cf-turnstile');
+      if (container) {
+        container.setAttribute('data-sitekey', data.turnstile_site_key);
+      }
+    }
+    
     await loadGoogleMaps(data.maps_js_api_key);
+    
+    // Auto get location on page load
+    await autoGetLocation();
   } catch (e) {
     setStatus("error", e.message);
   }
-
-  document.getElementById("locateBtn").addEventListener("click", async () => {
-    try {
-      setStatus("loading", "取得定位中...");
-      const coords = await getLocation();
-      state.lat = coords.latitude;
-      state.lng = coords.longitude;
-      updateCoordsLabel();
-      setStatus("info", "定位完成");
-      if (map) map.setCenter({ lat: state.lat, lng: state.lng });
-    } catch (e) {
-      setStatus("error", e.message);
-    }
-  });
 
   async function runFlow(text) {
     if (state.lat === null || state.lng === null) {

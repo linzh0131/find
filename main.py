@@ -28,6 +28,8 @@ GEMINI_API_KEY = (
     os.environ.get("GEMINI_API_KEY", "")
     or os.environ.get("API_KEY", "")
 ).strip()
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "").strip()
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "").strip()
 
 PLACES_TEXT_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
 PLACES_FIELD_MASK = (
@@ -170,7 +172,10 @@ def health() -> Dict[str, bool]:
 
 @app.get("/config")
 def config() -> Dict[str, str]:
-    return {"maps_js_api_key": MAPS_JS_API_KEY}
+    return {
+        "maps_js_api_key": MAPS_JS_API_KEY,
+        "turnstile_site_key": TURNSTILE_SITE_KEY
+    }
 
 
 @app.post("/api/interpret")
