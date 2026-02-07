@@ -1,4 +1,4 @@
-#!/home/ryan/Documents/find/venv/bin/python3
+#!/Users/linzh/find/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys
