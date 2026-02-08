@@ -66,9 +66,17 @@ function renderResults() {
     const label = item.flag_label
       ? `<span class="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">${item.flag_label}</span>`
       : "";
+    
+    // Create Google Maps link
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name)}&query_place_id=${item.id}`;
+    
     card.innerHTML = `
       <div class="flex items-center justify-between">
-        <div class="font-semibold">${item.name}${label}</div>
+        <div class="font-semibold">
+          <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="text-emerald-300 hover:text-emerald-200 hover:underline" onclick="event.stopPropagation()">
+            ${item.name}
+          </a>${label}
+        </div>
         <div class="text-xs text-slate-400">#${idx + 1}</div>
       </div>
       <div class="mt-1 text-sm text-slate-300">距離: ${Math.round(item.distance_m)}m</div>
@@ -101,11 +109,7 @@ function highlightCard(id) {
       el.classList.add("ring-2", "ring-emerald-400");
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       const item = state.results.find(x => x.id === id);
-      if (item) {
-        document.getElementById("debugWd").textContent = item.score_breakdown.Wd;
-        document.getElementById("debugWr").textContent = item.score_breakdown.Wr;
-        document.getElementById("debugBreakdown").textContent = JSON.stringify(item.score_breakdown, null, 2);
-      }
+
     } else {
       el.classList.remove("ring-2", "ring-emerald-400");
     }
